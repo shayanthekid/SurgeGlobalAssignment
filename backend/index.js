@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const userRoutes = require('./routes/userRoutes'); // Import user routes
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -19,28 +20,8 @@ db.once('open', () => {
     console.log('Connected to MongoDB');
 });
 
-// Define a User Schema using Mongoose
-const userSchema = new mongoose.Schema({
-    username: { type: String, required: true },
-    email: { type: String, required: true },
-    password: { type: String, required: true },
-});
-
-// Create a User model from the schema
-const User = mongoose.model('User', userSchema);
-
-// Routes
-app.post('/register', async (req, res) => {
-    try {
-        const { username, email, password } = req.body;
-        const newUser = new User({ username, email, password });
-        await newUser.save();
-        res.status(201).json({ message: 'User registered successfully' });
-    } catch (error) {
-        console.error('Registration error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
+// Use user routes
+app.use('/api/users', userRoutes);
 
 // Start the server
 app.listen(PORT, () => {
