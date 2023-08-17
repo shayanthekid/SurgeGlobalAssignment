@@ -13,6 +13,7 @@ const RouteComponent = () => (
         <Route path="/" element={<Home />} /> 
         <Route path="/about" element={<About />} /> 
             <Route path={'/secure'} element={
+                //make this the listing page/home page. should redirect to login component
                 <RequireAuth loginPath={'/'}>
                     <div>
                         Secure
