@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useSignIn } from 'react-auth-kit'
 
 const SignUpForm = () => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const signIn = useSignIn()
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -14,6 +16,7 @@ const SignUpForm = () => {
             email,
             password,
         };
+
         try {
             const response = await fetch('http://localhost:5000/api/users/register', {
                 method: 'POST',
@@ -24,7 +27,23 @@ const SignUpForm = () => {
             });
 
             if (response.ok) {
+                const responseData = await response.json(); // Parse response JSON
                 console.log('User registered successfully');
+                console.log(responseData);
+                if (
+                    signIn({
+                        token: responseData.token,
+                        expiresIn: new Date(responseData.expiresIn),
+                        tokenType: "Bearer",
+                        authState: responseData.authUserState,
+                      
+                    })
+                ) {
+                    // Redirect or do-something
+                    console.log("Successful");
+                } else {
+                    // Handle sign-in error
+                }
                 // You can handle successful registration here, such as redirecting the user
             } else {
                 console.error('User registration failed');
