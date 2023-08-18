@@ -5,6 +5,7 @@ import { RequireAuth } from 'react-auth-kit'
 
 import Home from './pages/Home'; // Import your page components
 import About from './pages/About';
+import AuthPage from './pages/AuthPage';
 
 const RouteComponent = () => (
     <BrowserRouter>
@@ -12,9 +13,10 @@ const RouteComponent = () => (
           
         <Route path="/" element={<Home />} /> 
         <Route path="/about" element={<About />} /> 
+        <Route path="/auth" element={<AuthPage />} /> 
             <Route path={'/secure'} element={
                 //make this the listing page/home page. should redirect to login component
-                <RequireAuth loginPath={'/'}>
+                <RequireAuth loginPath={'/auth'}>
                     <div>
                         Secure
                     </div>
