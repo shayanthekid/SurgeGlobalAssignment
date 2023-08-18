@@ -14,7 +14,7 @@ const registerUser = async (req, res) => {
         console.log('Generated ID:', generatedId);
         const token =createAccessToken(generatedId);
         const now = new Date(); // Get the current time
-        const expiration = new Date(now.getTime() + 10 * 60 * 1000);
+        const expiration = 10080;
         res.status(201).json({
             message: 'User registered successfully', token: token, now: now, expiresIn: expiration, authUserState: savedUser   });
     } catch (error) {

@@ -33,7 +33,7 @@ const SignUpForm = () => {
                 if (
                     signIn({
                         token: responseData.token,
-                        expiresIn: new Date(responseData.expiresIn),
+                        expiresIn: responseData.expiresIn,
                         tokenType: "Bearer",
                         authState: responseData.authUserState,
                       
