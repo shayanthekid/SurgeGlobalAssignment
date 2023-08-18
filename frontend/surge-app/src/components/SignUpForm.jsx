@@ -5,17 +5,34 @@ const SignUpForm = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Implement your signup logic here, e.g. send data to backend
-        const userData = {
+        // Create a user object with the form data
+        const user = {
             username,
             email,
             password,
         };
+        try {
+            const response = await fetch('http://localhost:5000/api/users/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(user),
+            });
 
-        console.log('User Data:', userData);
+            if (response.ok) {
+                console.log('User registered successfully');
+                // You can handle successful registration here, such as redirecting the user
+            } else {
+                console.error('User registration failed');
+                // You can handle registration failure here, such as displaying an error message
+            }
+        } catch (error) {
+            console.error('Error registering user:', error);
+        }
     };
 
     return (
