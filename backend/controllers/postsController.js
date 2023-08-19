@@ -1,26 +1,42 @@
+const { Storage } = require('@google-cloud/storage');
 const Post = require('../models/Posts');
 const Likes = require('../models/Likes');
+const multer = require('multer');
 const admin = require('firebase-admin');
+const storage = new Storage();
 
 const serviceAccount = require('../utils/firebaseconfig');
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     storageBucket: 'surge-8fe27.appspot.com',
 });
+const bucket = admin.storage().bucket();
+const giveCurrentDateTime = () => {
+    const today = new Date();
+    const date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
+    const time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+    const dateTime = date + ' ' + time;
+    return dateTime;
+}
 
-const uploadImageToFirebase = async (req,res) => {
-    console.log(req);
+const uploadImageToFirebase = async (req, res) => {
+    try {
+        const image = req.file;
+        const imageName = `images/${Date.now()}-${image.originalname}`;
+        const file = bucket.file(imageName);
+        const imageBuffer = Buffer.from(image.buffer, 'base64');
+        await file.save(imageBuffer, {
+            metadata: { contentType: image.mimetype },
+        });
 
-    const bucket = admin.storage().bucket();
-    const imageName = `images/${Date.now()}.jpg`;
-    const file = bucket.file(imageName);
-
-    const imageBuffer = Buffer.from(base64Image, 'base64');
-    await file.save(imageBuffer, {
-        metadata: { contentType: 'image/jpeg' },
-    });
-    console.log(req);
-    return `gs://${bucket.name}/${imageName}`;
+        res.send({
+            status: "Success",
+            url: `gs://${bucket.name}/${imageName}`
+        })
+    } catch (error) {
+        console.error('Error uploading image:', error);
+        throw error; // Rethrow the error to be handled by the caller
+    }
 };
 
 const createPost = async (req, res) => {
