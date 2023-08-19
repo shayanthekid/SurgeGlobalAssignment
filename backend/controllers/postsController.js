@@ -1,9 +1,36 @@
 const Post = require('../models/Posts');
 const Likes = require('../models/Likes');
+const admin = require('firebase-admin');
+
+const serviceAccount = require('../utils/firebaseconfig');
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    storageBucket: 'surge-8fe27.appspot.com',
+});
+
+const uploadImageToFirebase = async (req,res) => {
+    console.log(req);
+
+    const bucket = admin.storage().bucket();
+    const imageName = `images/${Date.now()}.jpg`;
+    const file = bucket.file(imageName);
+
+    const imageBuffer = Buffer.from(base64Image, 'base64');
+    await file.save(imageBuffer, {
+        metadata: { contentType: 'image/jpeg' },
+    });
+    console.log(req);
+    return `gs://${bucket.name}/${imageName}`;
+};
 
 const createPost = async (req, res) => {
     try {
-        const { imageURI, userId } = req.body;
+        const { image, userId } = req.body;
+
+        // Upload image to Firebase Storage
+        const imageURI = await uploadImageToFirebase(image, userId);
+
+        // Create a new post
         const newPost = new Post({
             imageURI,
             userId,
@@ -48,4 +75,5 @@ const createLike = async (postId, userId) => {
 
 module.exports = {
     createPost,
+    uploadImageToFirebase
 };
