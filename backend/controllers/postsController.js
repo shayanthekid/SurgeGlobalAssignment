@@ -3,8 +3,8 @@ const Post = require('../models/Posts');
 const Likes = require('../models/Likes');
 const multer = require('multer');
 const admin = require('firebase-admin');
+const userController = require('./userController');
 const storage = new Storage();
-
 const serviceAccount = require('../utils/firebaseconfig');
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -29,38 +29,42 @@ const uploadImageToFirebase = async (req, res) => {
             metadata: { contentType: image.mimetype },
         });
 
-        res.send({
-            status: "Success",
-            url: `gs://${bucket.name}/${imageName}`
-        })
-    } catch (error) {
-        console.error('Error uploading image:', error);
-        throw error; // Rethrow the error to be handled by the caller
-    }
-};
-
-const createPost = async (req, res) => {
-    try {
-        const { image, userId } = req.body;
-
-        // Upload image to Firebase Storage
-        const imageURI = await uploadImageToFirebase(image, userId);
-
-        // Create a new post
-        const newPost = new Post({
-            imageURI,
-            userId,
+        // Get the signed URL for the uploaded image
+        const [url] = await file.getSignedUrl({
+            action: 'read',
+            expires: '03-01-2500', // Adjust the expiration date as needed
         });
 
-        const savedPost = await newPost.save();
+        res.send({
+            status: "Success",
+            url: url
+        });
+    } catch (error) {
+        console.error('Error uploading image:', error);
+        res.status(500).json({ error: 'Error uploading image' });
+    }
+};
+const createPost = async (req, res) => {
+    try {
+        let token = req.header('Authorization')
+        token = token?.split(' ')[1]
 
-        // Create a like for the newly created post and user
-        const savedLike = await createLike(savedPost._id, userId);
-        if (savedLike) {
-            res.status(201).json({ post: savedPost, like: savedLike });
-        } else {
-            res.status(400).json({ error: 'Like already exists for this post' });
-        }
+        // if the token is not found
+        if (!token) return res.status(401).send({ error: "TokenNotFound", message: "Token not found" })
+
+        // get the imageURL and description from the request body
+        const { imageURL, description } = req.body;
+
+        // verify the token
+        const decoded = userController.verifyJWToken(token)
+        console.log(decoded);
+        // if the token is invalid
+        if (!decoded) return res.status(401).send({ error: "InvalidToken", message: "Invalid token" })
+
+        // get the userid from the decoded token
+        const { userId } = decoded
+
+        // rest of the mongoose code
     } catch (error) {
         console.error('Error creating post:', error);
         res.status(500).json({ error: 'Internal server error' });

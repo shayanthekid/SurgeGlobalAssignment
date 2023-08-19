@@ -1,4 +1,4 @@
-const { sign } = require("jsonwebtoken");
+const { sign,verify } = require("jsonwebtoken");
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
 
@@ -64,9 +64,18 @@ const loginUser = async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+ const verifyJWToken = (token) => {
+    try {
+        const decoded = verify(token, "dnalskdnaskldn")
+        return decoded
+    } catch (error) {
+        console.log(error);
+    }
+}
 
 module.exports = {
     registerUser,
     createAccessToken,
-    loginUser
+    loginUser,
+    verifyJWToken
 };
