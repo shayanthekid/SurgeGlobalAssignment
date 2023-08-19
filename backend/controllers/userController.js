@@ -32,7 +32,7 @@ const createAccessToken = (id) => {
     return sign(
         {  id },
         "dnalskdnaskldn",
-        { expiresIn: '10m' }
+        { expiresIn: '7d' }
     );
 };
 

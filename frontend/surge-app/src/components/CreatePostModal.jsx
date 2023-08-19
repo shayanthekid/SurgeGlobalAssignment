@@ -1,15 +1,99 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Modal from 'react-modal';
 import PropTypes from 'prop-types';
 
-const CreatePostModal = ({ isOpen, onRequestClose, onSubmit }) => {
+const CreatePostModal = ({ isOpen, onRequestClose }) => {
+    const API_URL = 'http://localhost:5000/api';
+
     const [image, setImage] = useState('');
     const [caption, setCaption] = useState('');
 
-    
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        onSubmit(image, caption);
+
+        try {
+            const uploadedImageURL = await uploadImage(image);
+            // Now you can call your onSubmit function and pass the uploadedImageURL and caption
+            const postData = {
+                imageURL: uploadedImageURL,
+                description: caption,
+            };
+
+            const post = await createPost(postData);
+            console.log('Post created successfully:', post);
+            onRequestClose();            
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            // Handle the error, show a message, etc.
+        }
+    };
+
+    const uploadImage = async (imageFile) => {
+        const formData = new FormData();
+        formData.append('filename', imageFile);
+
+        try {
+            const response = await fetch(`${API_URL}/posts/addimg`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error('Image upload failed');
+            }
+
+            const data = await response.json();
+            if (response.status !== 200) {
+                throw new Error(data.message);
+            } 
+
+            return data.url;
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            throw error;
+        }
+    };
+
+    const getToken = () => {
+        // get all cookies from the browser
+        const cookies = document.cookie.split('; ');
+        // find the cookie that starts with '_auth='
+        const cookie = cookies.find((cookie) => cookie.startsWith('_auth='));
+        // if there is no cookie, return null
+        if (!cookie) {
+            return null;
+        }
+
+        // get the token from the cookie
+        const token = cookie.split('=')[1];
+        return token;
+    }
+
+    const createPost = async (postData) => {
+        const token = getToken();
+
+        try {   
+            const response = await fetch(`${API_URL}/posts/add`, {
+                method: 'POST',
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(postData),
+            });
+
+            const data = await response.json();
+            if (response.status !== 201) {
+                throw new Error(data.message);
+            }
+
+            // Handle the success
+            console.log('Post created successfully:', data);
+            return data;
+        } catch (error) {
+            console.error('Error creating post:', error);
+            // Handle the error, show a message, etc.
+        }
     };
 
     return (

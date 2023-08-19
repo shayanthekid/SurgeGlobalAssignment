@@ -6,6 +6,7 @@ const admin = require('firebase-admin');
 const userController = require('./userController');
 const storage = new Storage();
 const serviceAccount = require('../utils/firebaseconfig');
+
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     storageBucket: 'surge-8fe27.appspot.com',
@@ -44,6 +45,7 @@ const uploadImageToFirebase = async (req, res) => {
         res.status(500).json({ error: 'Error uploading image' });
     }
 };
+
 const createPost = async (req, res) => {
     try {
         let token = req.header('Authorization')
@@ -55,16 +57,39 @@ const createPost = async (req, res) => {
         // get the imageURL and description from the request body
         const { imageURL, description } = req.body;
 
+        if (!imageURL) return res.status(400).send({ error: "ImageURLNotFound", message: "ImageURL not found" })
+        if (!description) return res.status(400).send({ error: "DescriptionNotFound", message: "Description not found" })
+
         // verify the token
         const decoded = userController.verifyJWToken(token)
-        console.log(decoded);
+
         // if the token is invalid
         if (!decoded) return res.status(401).send({ error: "InvalidToken", message: "Invalid token" })
 
         // get the userid from the decoded token
-        const { userId } = decoded
+        const { id } = decoded
+        try {
+            const data = {
+                imageURI: imageURL,
+                userId: id,
+                description
+            }
 
-        // rest of the mongoose code
+            // Create a new post
+            const newPost = new Post(data);
+
+            const savedPost = await newPost.save();
+            if (savedPost) res.status(201).json({ post: savedPost });
+            else res.status(400).json({ error: 'Error creating post' });
+
+            // // Create a like for the newly created post and user
+            // const savedLike = await createLike(savedPost._id, id);
+            // if (savedLike) res.status(201).json({ post: savedPost, like: savedLike });
+            // else res.status(400).json({ error: 'Like already exists for this post' });
+        } catch (error) {
+            console.error('Error creating post:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
     } catch (error) {
         console.error('Error creating post:', error);
         res.status(500).json({ error: 'Internal server error' });

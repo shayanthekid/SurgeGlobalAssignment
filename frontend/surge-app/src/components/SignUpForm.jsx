@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { useSignIn } from 'react-auth-kit'
 
 const SignUpForm = () => {
@@ -29,7 +29,6 @@ const SignUpForm = () => {
             if (response.ok) {
                 const responseData = await response.json(); // Parse response JSON
                 console.log('User registered successfully');
-                console.log(responseData);
                 if (
                     signIn({
                         token: responseData.token,

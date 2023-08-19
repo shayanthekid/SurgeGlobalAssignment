@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import {
+    useSignIn
+} from 'react-auth-kit'
 
 const SignInForm = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const signIn = useSignIn()
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -23,9 +27,23 @@ const SignInForm = () => {
             });
 
             if (response.ok) {
-                const data = await response.json();
-                console.log('Login successful:', data);
+                const responseData = await response.json();
+                console.log('Login successful:', responseData);
                 // Handle successful login here, e.g. redirect user or update state
+                if (
+                    signIn({
+                        token: responseData.token,
+                        expiresIn: responseData.expiresIn,
+                        tokenType: "Bearer",
+                        authState: responseData.authUserState,
+
+                    })
+                ) {
+                    // Redirect or do-something
+                    console.log("Successful");
+                } else {
+                    // Handle sign-in error
+                }
             } else {
                 console.error('Login failed');
                 // Handle login failure here, e.g. display an error message

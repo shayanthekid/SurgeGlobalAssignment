@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import homeIcon from '../assets/icons/home.svg'; 
 import createPostIcon from '../assets/icons/plus.svg'; 
 import userProfileIcon from '../assets/icons/user.svg';
@@ -13,13 +13,6 @@ const BottomNavigation = () => {
 
     const closeModal = () => {
         setIsModalOpen(false);
-    };
-
-    const handleSubmitPost = (image, caption) => {
-        // Implement the logic to send the post data to your backend
-        console.log('Image:', image);
-        console.log('Caption:', caption);
-        closeModal();
     };
 
     return (
@@ -48,7 +41,6 @@ const BottomNavigation = () => {
             <CreatePostModal
                 isOpen={isModalOpen}
                 onRequestClose={closeModal}
-                onSubmit={handleSubmitPost}
             />
         </nav>
     );
