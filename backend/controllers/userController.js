@@ -1,10 +1,14 @@
 const { sign } = require("jsonwebtoken");
+const bcrypt = require('bcrypt');
 const User = require('../models/User');
 
 const registerUser = async (req, res) => {
     try {
         const { username, email, password } = req.body;
-        const newUser = new User({ username, email, password });
+      //hashes the password
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new User({ username, email, password: hashedPassword });
+      
         await newUser.save();
         // Save the new user
         const savedUser = await newUser.save();
@@ -12,6 +16,7 @@ const registerUser = async (req, res) => {
         // The savedUser object will have the generated _id
         const generatedId = savedUser._id;
         console.log('Generated ID:', generatedId);
+        //Generate a new token
         const token =createAccessToken(generatedId);
         const now = new Date(); // Get the current time
         const expiration = 10080;
@@ -31,24 +36,37 @@ const createAccessToken = (id) => {
     );
 };
 
-const createRefreshToken = (user) => {
-    return sign(
-        { userId: id, tokenVersion: user.tokenVersion },
-        "ianvavauofcafai",
-        { expiresIn: '7d' }
-    );
-};
+const loginUser = async (req, res) => {
+    const { email, password } = req.body;
 
-const sendRefreshToken = (token, res) => {
-    res.cookie(
-        'jid', token,
-        { httpOnly: true }
-    );
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        const passwordMatch = await bcrypt.compare(password, user.password);
+
+        if (!passwordMatch) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        // Generate an access token and send it in the response
+        const token = createAccessToken(user._id);
+        const now = new Date(); // Get the current time
+        const expiration = 10080;
+        res.status(201).json({
+            message: 'User Login success', token: token, now: now, expiresIn: expiration, authUserState: user
+        });
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 };
 
 module.exports = {
     registerUser,
     createAccessToken,
-    createRefreshToken,
-    sendRefreshToken
+    loginUser
 };

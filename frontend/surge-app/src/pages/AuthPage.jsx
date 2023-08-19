@@ -23,7 +23,7 @@ const AuthPage = () => {
                     <footer className="text-center p-4">
                         <div className="text-lg font-semibold">Surge SE Internship March 2023</div>
                         {/* <div className="mt-1 text-gray-600">Sajid Fayaz Haniff  {auth().username}</div> */}
-                        <div className="mt-1 text-gray-600">Sajid Fayaz Haniff  {auth().username}</div>
+                        <div className="mt-1 text-gray-600">Sajid Fayaz Haniff</div>
                     </footer>
                 </div>
             </div>
