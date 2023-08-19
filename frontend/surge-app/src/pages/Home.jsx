@@ -30,7 +30,7 @@ const Home = () => {
     return (
         <div className="min-h-screen bg-gray-100">
             <h1 className="fixed left-10 top-10 ">Logo</h1>
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[90vh] overflow-y-auto">
                
                 {dummyListData.map((item) => (
                     <ListItemCard
