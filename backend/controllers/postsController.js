@@ -47,35 +47,49 @@ const uploadImageToFirebase = async (req, res) => {
         res.status(500).json({ error: 'Error uploading image' });
     }
 };
+
 const getPosts = async (req, res) => {
     try {
-        const { page = 1 } = req.query; // Get the requested page number from the query parameter
+        const { page = 1, limit=10 } = req.query; // Get the requested page number from the query parameter
 
-        const pageSize = 10; // Set the number of posts per page
-        const skip = (page - 1) * pageSize; // Calculate the number of posts to skip
+        // const pageSize = 10; // Set the number of posts per page
+        // const skip = (page - 1) * pageSize; // Calculate the number of posts to skip
 
-        // Calculate the total count of posts
-        const totalPostsCount = await Post.countDocuments();
+        // // Calculate the total count of posts
+        // const totalPostsCount = await Post.countDocuments();
 
-        // Retrieve paginated posts and order them by date created in descending order
-        const posts = await Post.find()
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(pageSize)
-            .populate('userId', 'username'); // Populate the 'userId' field with 'username'
+        // // Retrieve paginated posts and order them by date created in descending order
+        // const posts = await Post.find()
+        //     .sort({ createdAt: -1 })
+        //     .skip(skip)
+        //     .limit(pageSize)
+        //     .populate('userId', 'username'); // Populate the 'userId' field with 'username'
 
-        //populate Likes field with likecount
-        const postsWithLikeCount = await Promise.all(posts.map(async (post) => {
-            const likeCount = await getLikeCountForPost(post._id);
-            return {
-                ...post.toObject(),
-                likeCount,
-            };
-        }));
+        // //populate Likes field with likecount
+        // const postsWithLikeCount = await Promise.all(posts.map(async (post) => {
+        //     const likeCount = await getLikeCountForPost(post._id);
+        //     return {
+        //         ...post.toObject(),
+        //         likeCount,
+        //     };
+        // }));
 
-        const hasNextPage = (page * pageSize) < totalPostsCount;
+            // pagination
+    const total = await Post.countDocuments(
+        ownerId ? { ownerId } : {}
+    )
+    const posts = await postsCollection.find(
+        ownerId ? { ownerId } : {}
+    ).skip((parseInt(page) - 1) * parseInt(limit)).limit(parseInt(limit)).toArray()
+        const hasNextPage = (page * limit) < total;
 
-        res.status(200).json({ posts: postsWithLikeCount, hasNextPage });
+        res.status(200).json({
+        data: posts,
+        count: posts.length,
+        total,
+        page: parseInt(page),
+        hasNextPage,
+    });
     } catch (error) {
         console.error('Error getting posts:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -112,7 +126,11 @@ const createPost = async (req, res) => {
             }
 
             // Create a new post
-            const newPost = new Post(data);
+            const newPost = new Post({
+                ...data,
+                createdAt: giveCurrentDateTime(),
+                likes: []
+            });
 
             const savedPost = await newPost.save();
             if (savedPost) res.status(201).json({ post: savedPost });
@@ -133,28 +151,6 @@ const createPost = async (req, res) => {
 };
 
 
-
-const createLike = async (postId, userId) => {
-    try {
-        // Check if the like already exists for the given post and user
-        const existingLike = await Likes.findOne({ postId, userId });
-
-        if (existingLike) {
-            return null; // Return null to indicate like already exists
-        }
-
-        const newLike = new Likes({
-            postId,
-            userId,
-        });
-
-        const savedLike = await newLike.save();
-        return savedLike;
-    } catch (error) {
-        console.error('Error creating like:', error);
-        return null;
-    }
-};
 
 module.exports = {
     createPost,

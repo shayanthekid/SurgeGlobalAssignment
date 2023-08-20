@@ -21,14 +21,8 @@ const Home = () => {
         ['posts', 1], // Initial query key with page number 1
         (_, page) => fetchPosts(page),
         {
-            getFetchMore: (lastGroup, allGroups) => {
-                if (!lastGroup.hasNextPage) {
-                    return false; // Stop fetching more if there are no more pages
-                }
-                // Calculate the next page number based on your API's structure
-                return allGroups.length + 1;
-            },
-            fetchMore: (newPage, allGroups) => fetchPosts(newPage), // Add this callback
+            getFetchMore: (lastGroup) => lastGroup.hasNextPage,
+            fetchMore: (newPage) => fetchPosts(newPage), // Add this callback
         }
     );
 
@@ -59,19 +53,16 @@ const Home = () => {
     const containerRef = useRef(null);
 
     const handleScroll = () => {
-        console.log("Scrolling...");
         if (
             containerRef.current &&
             containerRef.current.scrollTop + containerRef.current.clientHeight >= containerRef.current.scrollHeight
         ) {
-            console.log("Reached bottom of container");
             if (canFetchMore && !isFetchingMore) {
-                const nextPage = Math.ceil(data?.posts.length / 10) + 1; // Calculate the next page number
-                
+                const nextPage = data?.posts.length / 10 + 1; // Calculate the next page number
+
                 fetchMore(nextPage);
             }
         }
-        
     };
 
     useEffect(() => {

@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const userRoutes = require('./routes/userRoutes');
 const postRoutes = require('./routes/postRoutes');
+const likesRoutes = require('./routes/likesRoutes');
 const connectDatabase = require('./utils/db'); // Import the database module
 
 const app = express();
@@ -28,6 +29,7 @@ connectDatabase();
 
 app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/', likesRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
