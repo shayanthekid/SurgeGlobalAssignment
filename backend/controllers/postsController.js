@@ -47,27 +47,41 @@ const uploadImageToFirebase = async (req, res) => {
         res.status(500).json({ error: 'Error uploading image' });
     }
 };
-
 const getPosts = async (req, res) => {
     try {
-        // Retrieve all posts and order them by date created in descending order
+        const { page = 1 } = req.query; // Get the requested page number from the query parameter
+
+        const pageSize = 10; // Set the number of posts per page
+        const skip = (page - 1) * pageSize; // Calculate the number of posts to skip
+
+        // Calculate the total count of posts
+        const totalPostsCount = await Post.countDocuments();
+
+        // Retrieve paginated posts and order them by date created in descending order
         const posts = await Post.find()
             .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(pageSize)
             .populate('userId', 'username'); // Populate the 'userId' field with 'username'
-        
-            const postsWithLikeCount = await Promise.all(posts.map(async (post) => {
+
+        //populate Likes field with likecount
+        const postsWithLikeCount = await Promise.all(posts.map(async (post) => {
             const likeCount = await getLikeCountForPost(post._id);
             return {
                 ...post.toObject(),
                 likeCount,
             };
         }));
-        res.status(200).json({ posts: postsWithLikeCount });
+
+        const hasNextPage = (page * pageSize) < totalPostsCount;
+
+        res.status(200).json({ posts: postsWithLikeCount, hasNextPage });
     } catch (error) {
         console.error('Error getting posts:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
 const createPost = async (req, res) => {
     try {
         let token = req.header('Authorization')
