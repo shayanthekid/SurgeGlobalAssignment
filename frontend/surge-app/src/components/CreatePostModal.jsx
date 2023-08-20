@@ -156,7 +156,6 @@ const CreatePostModal = ({ isOpen, onRequestClose }) => {
 CreatePostModal.propTypes = {
     isOpen: PropTypes.bool.isRequired,
     onRequestClose: PropTypes.func.isRequired,
-    onSubmit: PropTypes.func.isRequired,
 };
 
 export default CreatePostModal;

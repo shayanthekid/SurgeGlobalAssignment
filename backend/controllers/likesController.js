@@ -64,9 +64,6 @@ const createLike = async (req,res) => {
 
         const post = await Post.findOne({ _id: objectId })
         if (!post) return res.status(404).send({ error: "PostNotFound", message: "Post not found" })
-
-        console.log(post);
-
         let result;
         if (post.likes && post.likes.includes(userId)) {
             // remove the user from the likes array

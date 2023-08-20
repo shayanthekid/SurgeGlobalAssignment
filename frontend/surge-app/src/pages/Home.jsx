@@ -1,34 +1,93 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import ListItemCard from '../components/ListItemCard';
 import BottomNavigation from '../components/BottomNavigation';
-import { useQuery } from 'react-query';
-
+import { useInfiniteQuery } from 'react-query';
 
 const Home = () => {
-    const fetchPosts = async (page = 1) => {
-        const response = await fetch(`http://localhost:5000/api/posts/getAll?page=${page}`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch posts');
+    const getToken = () => {
+        // get all cookies from the browser
+        const cookies = document.cookie.split('; ');
+        // find the cookie that starts with '_auth='
+        const cookie = cookies.find((cookie) => cookie.startsWith('_auth='));
+        // if there is no cookie, return null
+        if (!cookie) {
+            return null;
         }
-        const data = await response.json();
-        return {
-            posts: data.posts,
-            hasNextPage: data.hasNextPage
-        };
+
+        // get the token from the cookie
+        const token = cookie.split('=')[1];
+        return token;
+    }
+
+    const fetchPosts = async (page = 1) => {
+     const API_URL = 'http://localhost:5000/api';
+
+        const token = getToken();
+        try{
+            const response = await fetch(`${API_URL}/posts/getAll?page=${page}`, {
+                method: 'GET',
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+            
+            const data = await response.json();
+            return data
+        } catch (error) {
+            console.error(error);
+            return error;
+        }
     };
 
-    const { data, error, isFetchingMore, fetchMore, canFetchMore } = useQuery(
-        ['posts', 1], // Initial query key with page number 1
-        (_, page) => fetchPosts(page),
-        {
-            getFetchMore: (lastGroup) => lastGroup.hasNextPage,
-            fetchMore: (newPage) => fetchPosts(newPage), // Add this callback
-        }
-    );
+   const {
+       isLoading,
+       error,
+       data,
+       fetchNextPage,
+       hasNextPage,
+       isFetchingNextPage
+   } = useInfiniteQuery({
+       queryKey: ['posts'],
+       queryFn: ({
+           pageParam = 1
+       }) => {
+           if (pageParam > 1) return fetchPosts(pageParam);
+           else return fetchPosts( pageParam)
+       },
+       getNextPageParam: (lastPage, pages) => {
+           const maxPages = lastPage.total;
+           const nextPage = pages.length + 1;
+           return nextPage <= maxPages ? nextPage : undefined;
+       },
+   });
 
-    if (error) {
-        console.error('Error fetching posts:', error);
-    }
+   // Infinite scroll
+   useEffect(() => {
+       let fetching = false;
+       const onScroll = async (event) => {
+           const {
+               scrollHeight,
+               scrollTop,
+               clientHeight
+           } =
+           event.target.scrollingElement;
+
+           console.log("hasNextPage", hasNextPage);
+           
+           if (!fetching && scrollHeight - scrollTop <= clientHeight * 2.3) {
+               fetching = true;
+               if (hasNextPage) await fetchNextPage();
+               fetching = false;
+           }
+       };
+
+       document.addEventListener("scroll", onScroll);
+       return () => {
+           document.removeEventListener("scroll", onScroll);
+       };
+       // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [hasNextPage]);
 
     const formatTimeAgo = (date) => {
         const currentDate = new Date();
@@ -50,49 +109,36 @@ const Home = () => {
         }
     };
 
-    const containerRef = useRef(null);
-
-    const handleScroll = () => {
-        if (
-            containerRef.current &&
-            containerRef.current.scrollTop + containerRef.current.clientHeight >= containerRef.current.scrollHeight
-        ) {
-            if (canFetchMore && !isFetchingMore) {
-                const nextPage = data?.posts.length / 10 + 1; // Calculate the next page number
-
-                fetchMore(nextPage);
-            }
-        }
-    };
-
-    useEffect(() => {
-        containerRef.current.addEventListener('scroll', handleScroll);
-        return () => {
-            containerRef.current.removeEventListener('scroll', handleScroll);
-        };
-    }, []);
-
+    if (error instanceof Error) {
+        return <div> An error has occurred: {error.message} </div>;
+    }
 
     return (
         <div className="min-h-screen bg-gray-100">
             <h1 className="fixed left-10 top-10 ">Logo</h1>
-            <div ref={containerRef} className="space-y-4 max-h-[90vh] overflow-y-auto">
-
-                {data?.posts.map((post) => (
-                    <ListItemCard
-                        key={post._id}
-                        imageSrc={post.imageURI}
-                        likeCount={post.likeCount}
-                        username={post.userId.username}
-                        date={formatTimeAgo(post.dateCreated)} // Format the date
-                    />
-                ))}
-                {isFetchingMore && <p>Loading more...</p>}
+            <div className="space-y-4 max-h-[90vh] overflow-y-auto">
+                {data && data.pages && data?.pages.map((page, index) => {
+                    return (
+                        <React.Fragment key={index}>
+                            {page.data.map((post) => {
+                                return (
+                                    <ListItemCard
+                                        key={post._id}
+                                        imageSrc={post.imageURI}
+                                        likeCount={post.likes.length}
+                                        username = {post.userId.username}
+                                        date={formatTimeAgo(post.dateCreated)}
+                                    />
+                                );
+                            })}
+                        </React.Fragment>
+                    );
+                })}
+                {isFetchingNextPage && <p> Loading more... </p>}
 
                 {/* This conditional rendering ensures that the loading paragraph is only displayed at the bottom */}
-                {!canFetchMore && !isFetchingMore && <p>All posts loaded.</p>}
+                {!isLoading && !isFetchingNextPage && (<p> All posts loaded. </p>)}
             </div>
-
             <BottomNavigation />
         </div>
     );

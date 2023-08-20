@@ -3,8 +3,11 @@ import homeIcon from '../assets/icons/home.svg';
 import createPostIcon from '../assets/icons/plus.svg'; 
 import userProfileIcon from '../assets/icons/user.svg';
 import CreatePostModal from '././CreatePostModal'; // Make sure to provide the correct path
+import { useSignOut } from 'react-auth-kit'
 
 const BottomNavigation = () => {
+    const signOut = useSignOut()
+
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const openModal = () => {
@@ -35,8 +38,12 @@ const BottomNavigation = () => {
             {/* User Profile Tab */}
             <a href="/profile" className="flex flex-col items-center">
                 <img src={userProfileIcon} alt="User Profile Icon" className="h-6 w-6" />
-
-                Profile
+                <button
+                    onClick={() => signOut()}
+                    className="  text-red-500 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                >
+                    Sign Out
+                </button>
             </a>
             <CreatePostModal
                 isOpen={isModalOpen}
