@@ -11,18 +11,15 @@ const RouteComponent = () => (
     <BrowserRouter>
     <Routes >
           
-        <Route path="/home" element={<Home />} /> 
+            <Route path="/home" element={
+                <RequireAuth loginPath="/auth">
+                    <Home />
+                </RequireAuth>
+            } /> 
         <Route path="/about" element={<About />} /> 
         <Route path="/auth" element={<AuthPage />} /> 
-            <Route path={'/secure'} element={
-                //make this the listing page/home page. should redirect to login component
-                <RequireAuth loginPath={'/auth'}>
-                    <div>
-                        Secure
-                    </div>
-                </RequireAuth>
-            } />
-        {/* Add more routes as needed */}
+        <Route path="/profile" element={<AuthPage />} /> 
+    
          
     </Routes >
     </BrowserRouter>

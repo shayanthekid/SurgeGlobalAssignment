@@ -2,7 +2,6 @@ import { useState } from 'react';
 import AuthTabs from '../components/AuthTabs';
 import SignInForm from '../components/SignInForm';
 import SignUpForm from '../components/SignUpForm';
-import { useAuthUser } from 'react-auth-kit'
 
 const AuthPage = () => {
     const [activeTab, setActiveTab] = useState('signin');
@@ -10,7 +9,6 @@ const AuthPage = () => {
     const handleTabChange = (tab) => {
         setActiveTab(tab);
     };
-    const auth = useAuthUser()
 
     return (
         <div className="flex justify-center items-center min-h-screen bg-gray-100">

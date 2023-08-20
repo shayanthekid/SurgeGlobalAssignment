@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 import likeIcon from '../assets/icons/heart.svg';
 import likedIcon from '../assets/icons/heartred.svg';
@@ -84,8 +84,10 @@ const ListItemCard = ({ imageSrc, likes, username, date, postId, description }) 
                 <div className="flex items-center space-x-2">
                     {renderLikes()}
                 </div>
-                <span>{username}</span>
-                <span>{date}</span>
+                <div className="flex flex-col items-center space-x-2">
+                    <span className="text-sm text-gray-600">{username}</span>
+                    <span className="text-sm text-gray-600">{date}</span>
+            </div>
             </div>
 
             <div className="flex w-full justify-between items-center mt-2">
