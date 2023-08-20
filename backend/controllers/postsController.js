@@ -46,6 +46,17 @@ const uploadImageToFirebase = async (req, res) => {
     }
 };
 
+const getPosts = async (req, res) => {
+    try {
+        // Retrieve all posts and order them by date created in descending order
+        const posts = await Post.find().sort({ createdAt: -1 });
+
+        res.status(200).json({ posts });
+    } catch (error) {
+        console.error('Error getting posts:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
 const createPost = async (req, res) => {
     try {
         let token = req.header('Authorization')
@@ -96,6 +107,8 @@ const createPost = async (req, res) => {
     }
 };
 
+
+
 const createLike = async (postId, userId) => {
     try {
         // Check if the like already exists for the given post and user
@@ -120,5 +133,6 @@ const createLike = async (postId, userId) => {
 
 module.exports = {
     createPost,
-    uploadImageToFirebase
+    uploadImageToFirebase,
+    getPosts
 };

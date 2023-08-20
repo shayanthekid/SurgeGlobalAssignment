@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import userProfileIcon from '../assets/icons/user.svg';
+import likeIcon from '../assets/icons/heart.svg';
 
 const ListItemCard = ({ imageSrc, likeCount, username, date }) => {
     return (
@@ -9,7 +9,7 @@ const ListItemCard = ({ imageSrc, likeCount, username, date }) => {
 
             <div className="flex items-center justify-between mt-2">
                 <div className="flex items-center space-x-2">
-                    <img src={userProfileIcon} alt="Like Icon" className="h-4 w-4" />
+                    <img src={likeIcon} alt="Like Icon" className="h-4 w-4" />
                     <span>{likeCount}</span>
                 </div>
                 <span>{username}</span>

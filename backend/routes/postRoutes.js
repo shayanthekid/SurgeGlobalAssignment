@@ -7,4 +7,5 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 router.post('/add', postController.createPost);
 router.post('/addImg', upload.single("filename"), postController.uploadImageToFirebase);
+router.get('/getAll', postController.getPosts);
 module.exports = router;
