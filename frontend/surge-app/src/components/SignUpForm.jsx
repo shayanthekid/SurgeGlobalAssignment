@@ -1,11 +1,13 @@
 import  { useState } from 'react';
 import { useSignIn } from 'react-auth-kit'
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const SignUpForm = () => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const signIn = useSignIn()
+    const navigate = useNavigate(); // Get the navigate function
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -40,6 +42,8 @@ const SignUpForm = () => {
                 ) {
                     // Redirect or do-something
                     console.log("Successful");
+                    navigate('/home'); // Use navigate function to redirect
+
                 } else {
                     // Handle sign-in error
                 }
