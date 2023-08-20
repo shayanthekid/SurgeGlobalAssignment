@@ -6,6 +6,8 @@ const admin = require('firebase-admin');
 const userController = require('./userController');
 const storage = new Storage();
 const serviceAccount = require('../utils/firebaseconfig');
+const { getLikeCountForPost } = require('./likesController');
+
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -49,9 +51,18 @@ const uploadImageToFirebase = async (req, res) => {
 const getPosts = async (req, res) => {
     try {
         // Retrieve all posts and order them by date created in descending order
-        const posts = await Post.find().sort({ createdAt: -1 });
-
-        res.status(200).json({ posts });
+        const posts = await Post.find()
+            .sort({ createdAt: -1 })
+            .populate('userId', 'username'); // Populate the 'userId' field with 'username'
+        
+            const postsWithLikeCount = await Promise.all(posts.map(async (post) => {
+            const likeCount = await getLikeCountForPost(post._id);
+            return {
+                ...post.toObject(),
+                likeCount,
+            };
+        }));
+        res.status(200).json({ posts: postsWithLikeCount });
     } catch (error) {
         console.error('Error getting posts:', error);
         res.status(500).json({ error: 'Internal server error' });

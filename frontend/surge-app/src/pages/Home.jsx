@@ -36,8 +36,8 @@ const Home = () => {
                     <ListItemCard
                         key={post._id}
                         imageSrc={post.imageURI}
-                        likeCount="2" // Assuming there's a likes array
-                        username="ssdf" // Assuming there's a user field with a username
+                        likeCount={post.likeCount} // Assuming there's a likes array
+                        username={post.userId.username} // Assuming there's a user field with a username
                         date={post.dateCreated}
                     />
                 ))}
