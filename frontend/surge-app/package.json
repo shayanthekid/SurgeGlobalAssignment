@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "autoprefixer": "^10.4.15",
+    "lottie-react": "^2.4.0",
     "postcss": "^8.4.28",
     "react": "^18.2.0",
     "react-auth-kit": "^2.12.6",

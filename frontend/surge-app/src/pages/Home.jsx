@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect} from 'react';
 import ListItemCard from '../components/ListItemCard';
 import BottomNavigation from '../components/BottomNavigation';
 import { useInfiniteQuery } from 'react-query';
@@ -19,18 +19,18 @@ const Home = () => {
         return token;
     }
 
-    const fetchPosts = async (page = 1) => {
-     const API_URL = 'http://localhost:5000/api';
-
+    const fetchPosts = async (pageParam = 1) => {
+        const API_URL = 'http://localhost:5000/api';
         const token = getToken();
+        
         try{
-            const response = await fetch(`${API_URL}/posts/getAll?page=${page}`, {
-                method: 'GET',
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            });
+                const response = await fetch(`${API_URL}/posts/getAll?page=${pageParam}`, {
+                    method: 'GET',
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
             
             const data = await response.json();
             return data
@@ -41,7 +41,6 @@ const Home = () => {
     };
 
    const {
-       isLoading,
        error,
        data,
        fetchNextPage,
@@ -49,14 +48,9 @@ const Home = () => {
        isFetchingNextPage
    } = useInfiniteQuery({
        queryKey: ['posts'],
-       queryFn: ({
-           pageParam = 1
-       }) => {
-           if (pageParam > 1) return fetchPosts(pageParam);
-           else return fetchPosts( pageParam)
-       },
+       queryFn: ({ pageParam = 1 }) => fetchPosts(pageParam),
        getNextPageParam: (lastPage, pages) => {
-           const maxPages = lastPage.total;
+           const maxPages = Math.ceil(lastPage.total / lastPage.count);
            const nextPage = pages.length + 1;
            return nextPage <= maxPages ? nextPage : undefined;
        },
@@ -72,10 +66,13 @@ const Home = () => {
                clientHeight
            } =
            event.target.scrollingElement;
+           console.log(
+            `scrollHeight: ${scrollHeight}, scrollTop: ${scrollTop}, clientHeight: ${clientHeight}`
+           );
 
-           console.log("hasNextPage", hasNextPage);
-           
-           if (!fetching && scrollHeight - scrollTop <= clientHeight * 2.3) {
+           console.log(`fetching: ${fetching}`);
+
+           if (!fetching && scrollHeight - scrollTop <= clientHeight) {
                fetching = true;
                if (hasNextPage) await fetchNextPage();
                fetching = false;
@@ -83,6 +80,7 @@ const Home = () => {
        };
 
        document.addEventListener("scroll", onScroll);
+    
        return () => {
            document.removeEventListener("scroll", onScroll);
        };
@@ -125,9 +123,11 @@ const Home = () => {
                                     <ListItemCard
                                         key={post._id}
                                         imageSrc={post.imageURI}
-                                        likeCount={post.likes.length}
+                                        likes={post.likes}
                                         username = {post.userId.username}
                                         date={formatTimeAgo(post.dateCreated)}
+                                        postId={post._id}
+                                        description={post.description}
                                     />
                                 );
                             })}
@@ -136,8 +136,17 @@ const Home = () => {
                 })}
                 {isFetchingNextPage && <p> Loading more... </p>}
 
+                {hasNextPage && !isFetchingNextPage && (
+                    <button
+                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                        onClick={() => fetchNextPage()}
+                    >
+                        Load More
+                    </button>
+                )}
+
                 {/* This conditional rendering ensures that the loading paragraph is only displayed at the bottom */}
-                {!isLoading && !isFetchingNextPage && (<p> All posts loaded. </p>)}
+                {/* {!isLoading && !isFetchingNextPage && (<p> All posts loaded. </p>)} */}
             </div>
             <BottomNavigation />
         </div>
